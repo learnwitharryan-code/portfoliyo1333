@@ -24,7 +24,7 @@ renderer.setClearColor(0x000000, 1);
 
 // 1. The Event Horizon (Pure Black Sphere)
 const sphereGeometry = new THREE.SphereGeometry(10, 64, 64);
-const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
 const blackHole = new THREE.Mesh(sphereGeometry, sphereMaterial);
 scene.add(blackHole);
 
@@ -143,15 +143,24 @@ let targetCameraZ = baseCameraZ;
 let targetCameraY = 15;
 
 // Scroll to Zoom Interaction
+let targetUIOpacity = 1;
+
 window.addEventListener('scroll', () => {
     // Calculate scroll percentage
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercent = Math.min(window.scrollY / maxScroll, 1.0);
     
-    // Map scroll exactly to camera Z. 
-    // At bottom, we pull in very close to the event horizon (z=25, y=5)
-    targetCameraZ = baseCameraZ - (scrollPercent * 35); 
-    targetCameraY = 15 - (scrollPercent * 10);
+    // Intense zoom: Map scroll to pull camera inside the event horizon (r=10)
+    // 60 -> 2 (inside the black hole), 15 -> 0
+    targetCameraZ = baseCameraZ - (scrollPercent * 58); 
+    targetCameraY = 15 - (scrollPercent * 15);
+    
+    // UI fades out as you enter the event horizon (last 20% of the page)
+    if (scrollPercent > 0.8) {
+        targetUIOpacity = 1 - ((scrollPercent - 0.8) / 0.2);
+    } else {
+        targetUIOpacity = 1;
+    }
 });
 
 // Resize handler
@@ -183,12 +192,25 @@ function animate() {
     camera.position.y += (targetCameraY - camera.position.y) * 0.05;
     camera.lookAt(0, 0, 0);
 
+    // Fade UI Elements based on scroll
+    const uiElements = document.querySelectorAll('main, .navbar, .footer, .noise-overlay');
+    uiElements.forEach(el => {
+        // Only update if it exists & difference is noticeable to save layout thrashing
+        const currentOpac = parseFloat(el.style.opacity || 1);
+        if (Math.abs(currentOpac - targetUIOpacity) > 0.01) {
+            el.style.opacity = currentOpac + (targetUIOpacity - currentOpac) * 0.1;
+        }
+    });
+
     // Subtle star rotation
     stars.rotation.y = time * 0.01;
     
     // Accretion disk rotation (inner rotates faster than outer)
     accretionDisk.rotation.y -= 0.005; 
     
+    // Space distortion effect: as camera gets closer to z=10, the disk swirls faster
+    const proximityMultiplier = Math.max(1, (baseCameraZ / Math.max(1, camera.position.z)) * 0.2);
+
     // Simulate vortex physics directly on geometry vertices
     for (let i = 0; i < diskParticleCount; i++) {
         const i3 = i * 3;
@@ -197,8 +219,8 @@ function animate() {
         const z = positions[i3 + 2];
         const r = Math.sqrt(x*x + z*z);
         
-        // Orbital velocity: faster closer to the hole
-        const speed = 0.5 / Math.sqrt(r); 
+        // Orbital velocity: faster closer to the hole and faster as camera zooms in
+        const speed = (0.5 / Math.sqrt(r)) * proximityMultiplier; 
         
         // Update angle
         initialAngles[i] += speed * delta * 50; 
