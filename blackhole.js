@@ -20,8 +20,10 @@ resize();
 
 // Colors & Cosmic Params
 const colors = ['#8a2be2', '#4b0082', '#00bfff', '#4169e1', '#ffffff', '#e0b0ff'];
-const particleCount = 2500;
-const bhRadius = 80;
+// Optimize for mobile by significantly reducing particles
+const isMobile = window.innerWidth <= 768;
+const particleCount = isMobile ? 800 : 2500;
+const bhRadius = isMobile ? 50 : 80;
 
 const particles = [];
 for (let i = 0; i < particleCount; i++) {
@@ -54,8 +56,13 @@ let targetSpeedMultiplier = 1;
 
 document.addEventListener('mousedown', () => targetSpeedMultiplier = 8);
 document.addEventListener('mouseup', () => targetSpeedMultiplier = 1);
-document.addEventListener('touchstart', () => targetSpeedMultiplier = 8);
-document.addEventListener('touchend', () => targetSpeedMultiplier = 1);
+
+// For mobile, apply a burst of speed on touchstart (so scrolling feels heavy but fluid), 
+// but don't hold the speed during the entire scroll drag to save battery logic cycles.
+document.addEventListener('touchstart', () => {
+    targetSpeedMultiplier = 5;
+    setTimeout(() => targetSpeedMultiplier = 1, 300); // Quick reset burst
+}, { passive: true });
 
 let diskAngle = 0; 
 const diskTilt = 0.35; // 1 is flat/top-down, 0 is edge-on
