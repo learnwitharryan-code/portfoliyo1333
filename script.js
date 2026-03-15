@@ -1,111 +1,94 @@
-// script.js - Advanced Premium Interactions for Rishi Singh Portfolio
+/**
+ * Rishi Singh Portfolio - Premium Redesign Interactions
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Custom Cursor & LERP (Linear Interpolation) ---
+    // --- Preloader Logic ---
+    window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            setTimeout(() => {
+                preloader.classList.add('loaded');
+            }, 1000);
+        }
+    });
+
+    // --- Custom Cursor ---
     const cursor = document.getElementById('custom-cursor');
-    let mouseX = 0;
-    let mouseY = 0;
-    let cursorX = 0;
-    let cursorY = 0;
+    const links = document.querySelectorAll('a, button, .project-card, .skill-row');
 
     document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
+        const x = e.clientX;
+        const y = e.clientY;
+        
+        // Smother following
+        cursor.animate({
+            left: `${x}px`,
+            top: `${y}px`
+        }, { duration: 400, fill: "forwards" });
     });
 
-    function animateCursor() {
-        // Smoothly follow mouse with lerp
-        cursorX += (mouseX - cursorX) * 0.15;
-        cursorY += (mouseY - cursorY) * 0.15;
-        
-        cursor.style.transform = `translate(${cursorX - 5}px, ${cursorY - 5}px)`;
-        requestAnimationFrame(animateCursor);
-    }
-    animateCursor();
-
-    // --- Magnetic Buttons & Elements ---
-    const magnetics = document.querySelectorAll('.magnetic');
-    
-    magnetics.forEach(btn => {
-        btn.addEventListener('mousemove', (e) => {
-            const position = btn.getBoundingClientRect();
-            const x = e.clientX - position.left - position.width / 2;
-            const y = e.clientY - position.top - position.height / 2;
-            
-            // Move the button slightly toward mouse
-            btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
-            
-            // Expand cursor on hover
-            cursor.classList.add('active');
+    links.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            cursor.classList.add('hovering');
         });
-        
-        btn.addEventListener('mouseleave', () => {
-            btn.style.transform = 'translate(0, 0)';
-            cursor.classList.remove('active');
+        link.addEventListener('mouseleave', () => {
+            cursor.classList.remove('hovering');
         });
     });
 
-    // --- Work Item Cursor Expansion ---
-    const workItems = document.querySelectorAll('.work-item');
-    workItems.forEach(item => {
-        item.addEventListener('mouseenter', () => cursor.classList.add('active'));
-        item.addEventListener('mouseleave', () => cursor.classList.remove('active'));
-    });
-
-
-    // --- Preloader & Hero Entry ---
-    const preloader = document.getElementById('preloader');
-    const hero = document.getElementById('hero');
-
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            preloader.classList.add('loaded');
-            // Activate hero after preloader slides up
-            setTimeout(() => {
-                hero.classList.add('active');
-            }, 600);
-        }, 1200);
-    });
-
-    // --- Intersection Observer (Scroll Reveal) ---
-    const observerOptions = {
-        threshold: 0.2
+    // --- Intersection Observer for Reveals ---
+    const revealOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -100px 0px"
     };
 
-    const sectionObserver = new IntersectionObserver((entries) => {
+    const revealOnScroll = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('is-visible');
                 
-                // For Skills, trigger width animation
-                if (entry.target.id === 'skills') {
-                    // Logic handled by CSS if needed or here
-                }
+                // Once visible, we can unobserve if we only want it once
+                // observer.unobserve(entry.target); 
             }
         });
-    }, observerOptions);
+    }, revealOptions);
 
-    // Apply observer to paragraphs and sections
-    document.querySelectorAll('.reveal-p').forEach(p => sectionObserver.observe(p));
-    document.querySelectorAll('.section').forEach(section => sectionObserver.observe(section));
+    document.querySelectorAll('.fade-in-section, .title-mask').forEach(item => {
+        revealOnScroll.observe(item);
+    });
 
+    // --- Magnetic Effect for Links ---
+    const magneticLinks = document.querySelectorAll('.magnetic-link, .nav-links a');
 
-    // --- Work Grid Magnetic Hover ---
-    const workGridItems = document.querySelectorAll('.magnetic-wrap');
-    workGridItems.forEach(wrapper => {
-        const content = wrapper.querySelector('.magnetic-content');
-        
-        wrapper.addEventListener('mousemove', (e) => {
-            const rect = wrapper.getBoundingClientRect();
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
+    magneticLinks.forEach(link => {
+        link.addEventListener('mousemove', function(e) {
+            const pos = this.getBoundingClientRect();
+            const x = e.pageX - pos.left - window.scrollX;
+            const y = e.pageY - pos.top - window.scrollY;
             
-            content.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px) scale(1.02)`;
+            this.style.transform = `translate(${(x - pos.width / 2) * 0.3}px, ${(y - pos.height / 2) * 0.3}px)`;
         });
-        
-        wrapper.addEventListener('mouseleave', () => {
-            content.style.transform = 'translate(0, 0) scale(1)';
+
+        link.addEventListener('mouseleave', function() {
+            this.style.transform = 'translate(0px, 0px)';
+        });
+    });
+
+    // --- Smooth Scrolling ---
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const target = document.querySelector(targetId);
+            
+            if (target) {
+                window.scrollTo({
+                    top: target.offsetTop,
+                    behavior: 'smooth'
+                });
+            }
         });
     });
 
