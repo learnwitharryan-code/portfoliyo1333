@@ -130,21 +130,24 @@ a {
     position: fixed;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 80vw;
-    opacity: 0.03;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0.5; /* Increased for visibility */
     z-index: -1;
     pointer-events: none;
 }
 
 .bg-batman-full img {
     width: 100%;
-    filter: grayscale(1);
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.2);
     animation: pulseSubtle 10s infinite alternate ease-in-out;
 }
 
 @keyframes pulseSubtle {
-    0% { transform: scale(1); opacity: 0.02; }
-    100% { transform: scale(1.05); opacity: 0.04; }
+    0% { transform: scale(1); opacity: 0.4; }
+    100% { transform: scale(1.05); opacity: 0.6; }
 }
 
 /* --- Navigation --- */
@@ -156,6 +159,10 @@ a {
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .logo {
@@ -222,26 +229,31 @@ a {
     color: var(--text-secondary);
 }
 
-/* --- Work Section (Grid) --- */
 .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0;
-    border-top: 1px solid var(--border-dim);
-    border-left: 1px solid var(--border-dim);
+    gap: 30px;
+    padding: 40px;
 }
 
 .project-card {
-    border-right: 1px solid var(--border-dim);
-    border-bottom: 1px solid var(--border-dim);
-    padding: 60px;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    padding: 40px;
     position: relative;
     overflow: hidden;
-    transition: background 0.5s var(--transition-premium);
+    transition: transform 0.5s var(--transition-premium), background 0.5s, box-shadow 0.5s;
 }
 
 .project-card:hover {
-    background: #080808;
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .project-img-wrapper {
@@ -250,7 +262,7 @@ a {
     aspect-ratio: 16/10;
     overflow: hidden;
     margin-bottom: 30px;
-    background: #111;
+    border-radius: 8px;
 }
 
 .project-img-wrapper img {
